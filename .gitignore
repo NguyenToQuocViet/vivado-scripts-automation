@@ -1,0 +1,26 @@
+# --- Vivado Generated Files ---
+*.log
+*.jou
+*.str
+*.pb
+*.wdb
+*.os
+*.vdi
+*.vpp
+
+# --- Vivado Work Directories ---
+work/
+.Xil/
+*.sim/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+
+# --- Xilinx IP generated ---
+*.gen/
+
+# --- OS & Backup files ---
+*~
+*.bak
+.DS_Store
