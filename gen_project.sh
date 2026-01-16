@@ -8,6 +8,16 @@ fi
 
 PROJECT_NAME=$1
 
+# --- PHẦN SỬA LỖI TẠI ĐÂY ---
+# Sử dụng 'command -v' để lấy path thực và bỏ qua alias của Zsh
+VIVADO_PATH=$(unalias vivado 2>/dev/null; command -v vivado)
+
+# Nếu vẫn không tìm thấy, ta thử dùng đường dẫn bạn đã cài đặt trong alias
+if [ -z "$VIVADO_PATH" ]; then
+    VIVADO_PATH="$HOME/Data/Vivado/2025.2/Vivado/bin/vivado"
+fi
+# ----------------------------
+
 # Tao cau truc thu muc
 echo "[INFO] Creating directory structure for: ${PROJECT_NAME}"
 mkdir -p $PROJECT_NAME/rtl
@@ -43,7 +53,7 @@ EOF
 cat << EOF > $PROJECT_NAME/Makefile
 
 PROJECT_NM = $PROJECT_NAME
-VIVADO = vivado
+VIVADO = $VIVADO_PATH
 MODE = -mode batch
 
 .PHONY: all create clean open
