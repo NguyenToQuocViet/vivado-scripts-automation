@@ -1,18 +1,15 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Error: Chua nhap ten du an"
+    echo "Error: No project's name found"
     echo "Usage: ./gen_project.sh <project_name>"
     exit 1
 fi
 
 PROJECT_NAME=$1
 
-# --- PHẦN SỬA LỖI TẠI ĐÂY ---
-# Sử dụng 'command -v' để lấy path thực và bỏ qua alias của Zsh
 VIVADO_PATH=$(unalias vivado 2>/dev/null; command -v vivado)
 
-# Nếu vẫn không tìm thấy, ta thử dùng đường dẫn bạn đã cài đặt trong alias
 if [ -z "$VIVADO_PATH" ]; then
     VIVADO_PATH="$HOME/Data/Vivado/2025.2/Vivado/bin/vivado"
 fi
@@ -75,5 +72,4 @@ clean:
 	rm -rf .Xil
 EOF
 
-echo "[SUCCESS] Project '$PROJECT_NAME' đã sẵn sàng!"
-echo "Run: cd $PROJECT_NAME && make create"
+echo "[SUCCESS] Project '$PROJECT_NAME' is ready!"
