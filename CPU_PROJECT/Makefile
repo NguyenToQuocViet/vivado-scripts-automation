@@ -1,73 +1,74 @@
+# Makefile for Vivado TCL workflow
 PROJECT_NM = $(shell basename $(CURDIR))
 VIVADO = vivado
 MODE = -mode batch
 
-.PHONY: all build run sim clean open help
+.PHONY: all create build run sim synth impl clean distclean open help
 
-# Default
+# Default target
 all: build
 
-# Tao project
+# Create project
 create:
 	@echo "Creating Vivado Project..."
-	cd work && $(VIVADO) $(MODE) -source ../create_project.tcl
+	cd work && $(VIVADO) $(MODE) -source ../create_project.tcl -tclargs $(PROJECT_NM)
 
-# BUILD = Elaborate design
+# Elaborate design (syntax check)
 build:
 	@echo "Elaborating design (checking syntax)..."
 	cd work && $(VIVADO) $(MODE) -source ../tcl/elaborate.tcl
 
-# RUN = Simulation
+# Run simulation (batch mode)
 run:
 	@echo "Running simulation..."
 	cd work && $(VIVADO) $(MODE) -source ../tcl/sim.tcl
 
-# SIM = waveform GUI
+# Simulation with waveform GUI
 sim:
 	@echo "Opening simulation waveform..."
 	cd work && $(VIVADO) -mode gui -source ../tcl/sim.tcl
 
-# SYNTH = Synthesis 
+# Synthesis
 synth:
 	@echo "Running Synthesis..."
 	cd work && $(VIVADO) $(MODE) -source ../tcl/synth.tcl
 
-# IMPL = Implementation
+# Implementation
 impl:
 	@echo "Running Implementation..."
 	cd work && $(VIVADO) $(MODE) -source ../tcl/impl.tcl
 
-# Clean
+# Clean simulation files
 clean:
-	@echo "Cleaning up..."
-	rm -rf work/.Xil work/xsim.dir work/*.wdb work/*.jou work/*.log
-	@echo "Keep project file intact"
+	@echo "Cleaning simulation files..."
+	@rm -rf work/.Xil work/xsim.dir work/*.wdb work/*.jou work/*.log 2>/dev/null || true
+	@echo "Project files kept intact"
 
-# Deep clean 
+# Deep clean (remove everything)
 distclean:
 	@echo "Deep cleaning..."
-	rm -rf work/*
-	rm -f *.log *.jou
-	rm -rf .Xil/
+	@rm -rf work/* *.log *.jou .Xil/ 2>/dev/null || true
 
-# Open GUI
+# Open Vivado GUI
 open:
 	@echo "Opening Vivado GUI..."
 	cd work && $(VIVADO) $(PROJECT_NM).xpr &
 
-# Help
+# Help menu
 help:
+	@echo "=========================================="
 	@echo "RTL Development Workflow:"
-	@echo "  make create"
-	@echo "  make build"
-	@echo "  make run"
-	@echo "  make sim"
+	@echo "  make create    - Create new project"
+	@echo "  make build     - Elaborate (check syntax)"
+	@echo "  make run       - Run simulation (batch)"
+	@echo "  make sim       - Open waveform GUI"
 	@echo ""
 	@echo "Synthesis Workflow:"
-	@echo "  make synth"
-	@echo "  make impl"
+	@echo "  make synth     - Run synthesis"
+	@echo "  make impl      - Run implementation"
 	@echo ""
 	@echo "Utilities:"
-	@echo "  make clean"
-	@echo "  make distclean"
-	@echo "  make open"
+	@echo "  make clean     - Clean simulation files"
+	@echo "  make distclean - Remove all build files"
+	@echo "  make open      - Open Vivado GUI"
+	@echo "=========================================="
