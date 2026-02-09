@@ -80,31 +80,33 @@ sed -i "1i# Auto-generated for project: $PROJECT_NAME" $PROJECT_NAME/create_proj
 # ================================
 # Generate tcl/elaborate.tcl
 # ================================
-cat << 'EOF' > $PROJECT_NAME/tcl/elaborate.tcl
-# Elaborate design - syntax check without synthesis
+cat << 'EOF' > $PROJECT_NAME/tcl/lint.tcl
+# RTL Linting script using Vivado
 set project_name [file tail [file dirname [pwd]]]
-
 open_project ${project_name}.xpr
 
-# Update compile order
-update_compile_order -fileset sources_1
+# Create reports directory if not exists
+file mkdir reports
 
-puts "========== Elaborating Design =========="
+puts "========== Running RTL Linting (Check Synthesizability) =========="
 
-# Elaborate RTL design
-synth_design -rtl -name rtl_1
+# Chạy Elaboration với chế độ phân tích logic sâu
+synth_design -rtl -name rtl_lint
 
-# Check for errors
-if {[get_msg_config -count -severity ERROR] > 0} {
-    puts "ERROR: Syntax errors found!"
-    exit 1
+# 1. Kiểm tra Latch - "Kẻ thù" của thiết kế RTL
+set latches [get_cells -hierarchical -filter { IS_LATCH == "TRUE" }]
+if {[llength $latches] > 0} {
+    puts "CRITICAL WARNING: Latches detected in design: $latches"
+} else {
+    puts "SUCCESS: No latches detected."
 }
 
-# Report hierarchy
-report_compile_order -used_in synthesis
+# 2. Kiểm tra các quy tắc thiết kế (Methodology)
+report_methodology -file reports/lint_methodology.txt
+puts "Methodology report generated: work/reports/lint_methodology.txt"
 
-puts "SUCCESS: Design elaborated, no syntax errors"
-puts "Ready for simulation!"
+# 3. Kiểm tra các tín hiệu không được sử dụng hoặc lơ lửng
+report_drc -checks {HDRC-1} -file reports/lint_drc.txt
 
 close_design
 close_project
@@ -220,7 +222,7 @@ PROJECT_NM = $(shell basename $(CURDIR))
 VIVADO = vivado
 MODE = -mode batch
 
-.PHONY: all create build run sim synth impl clean distclean open help
+.PHONY: all create build lint run sim synth impl clean distclean open help
 
 # Default target
 all: build
@@ -234,6 +236,11 @@ create:
 build:
 	@echo "Elaborating design (checking syntax)..."
 	cd work && $(VIVADO) $(MODE) -source ../tcl/elaborate.tcl
+
+# Linting (Check synthesizability and quality)
+lint:
+	@echo "Running RTL Linting..."
+	cd work && $(VIVADO) $(MODE) -source ../tcl/lint.tcl
 
 # Run simulation (batch mode)
 run:
@@ -275,19 +282,20 @@ open:
 help:
 	@echo "=========================================="
 	@echo "RTL Development Workflow:"
-	@echo "  make create    - Create new project"
-	@echo "  make build     - Elaborate (check syntax)"
-	@echo "  make run       - Run simulation (batch)"
-	@echo "  make sim       - Open waveform GUI"
+	@echo "  make create    - Create new Vivado project"
+	@echo "  make build     - Elaborate design (check syntax)"
+	@echo "  make lint      - RTL Linting (check latches & quality)"
+	@echo "  make run       - Run simulation (batch mode)"
+	@echo "  make sim       - Open simulation waveform GUI"
 	@echo ""
-	@echo "Synthesis Workflow:"
-	@echo "  make synth     - Run synthesis"
-	@echo "  make impl      - Run implementation"
+	@echo "Synthesis & Implementation:"
+	@echo "  make synth     - Run synthesis & generate reports"
+	@echo "  make impl      - Run implementation & timing analysis"
 	@echo ""
 	@echo "Utilities:"
-	@echo "  make clean     - Clean simulation files"
-	@echo "  make distclean - Remove all build files"
-	@echo "  make open      - Open Vivado GUI"
+	@echo "  make clean     - Clean simulation junk files"
+	@echo "  make distclean - Deep clean (remove work directory)"
+	@echo "  make open      - Open Vivado Project GUI"
 	@echo "=========================================="
 EOF
 
