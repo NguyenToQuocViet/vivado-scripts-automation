@@ -80,6 +80,25 @@ sed -i "1i# Auto-generated for project: $PROJECT_NAME" $PROJECT_NAME/create_proj
 # ================================
 # Generate tcl/elaborate.tcl
 # ================================
+cat << 'EOF' > $PROJECT_NAME/tcl/elaborate.tcl
+# Elaboration script (Syntax check)
+set project_name [file tail [file dirname [pwd]]]
+
+# Mở project đã được tạo từ lệnh 'make create'
+open_project ${project_name}.xpr
+
+puts "========== Running Elaboration (Syntax Check) =========="
+# Cờ -rtl chỉ đạo Vivado vẽ sơ đồ khối và check syntax, không tổng hợp cổng logic
+synth_design -rtl -name rtl_1
+
+puts "SUCCESS: Elaboration completed. Check logs for any syntax errors."
+close_design
+close_project
+EOF
+
+# ================================
+# Generate tcl/lint.tcl
+# ================================
 cat << 'EOF' > $PROJECT_NAME/tcl/lint.tcl
 # RTL Linting script using Vivado
 set project_name [file tail [file dirname [pwd]]]
